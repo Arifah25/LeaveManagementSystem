@@ -5,7 +5,9 @@ import com.lms.LeaveManagementSystem.entity.LeaveBalance;
 import com.lms.LeaveManagementSystem.entity.User;
 import com.lms.LeaveManagementSystem.repository.LeaveBalanceRepository;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
+import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveBalanceService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,9 +24,8 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        MyUserDetails details = (MyUserDetails) auth.getPrincipal();
+        return details.getUser();
     }
 
     @Override

@@ -3,11 +3,14 @@ package com.lms.LeaveManagementSystem.security;
 import com.lms.LeaveManagementSystem.entity.User;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.util.JwtUtil;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +23,7 @@ import java.util.List;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private JwtUtil jwtUtil;
@@ -31,19 +35,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
+        log.debug("JwtAuthFilter: incoming request {} {}",
+                request.getMethod(), request.getRequestURI());
+
         String token = extractTokenFromHeader(request);
         if (token != null) {
+            log.debug("JwtAuthFilter: got Bearer token, validating…");
             String email = jwtUtil.extractEmail(token);
             if (email != null && jwtUtil.validateToken(token, email)) {
-                User user = userRepository.findByEmail(email).orElse(null);
+                User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
                 if (user != null) {
-                    // Map your Role enum to a Spring authority
-                    String roleName = user.getRole().name(); // "MANAGER"
+                    String roleName = user.getRole().name(); // e.g. "EMPLOYEE"
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
+                    MyUserDetails userDetails = new MyUserDetails(user);
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            user, null, List.of(authority));
+                            userDetails, // <-- principal is now MyUserDetails
+                            null,
+                            userDetails.getAuthorities());
+
+                    // (Re‑enable if you want request details)
                     // auth.setDetails(new WebAuthenticationDetailsSource()
                     // .buildDetails(request));
+
+                    // 🔍 Log the actual authorities on the auth token:
+                    log.debug("Authenticating user={}, authorities={}",
+                            userDetails, null, userDetails.getAuthorities());
+
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }

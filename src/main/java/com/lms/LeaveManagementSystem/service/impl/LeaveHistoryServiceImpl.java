@@ -5,6 +5,7 @@ import com.lms.LeaveManagementSystem.entity.LeaveHistory;
 import com.lms.LeaveManagementSystem.entity.User;
 import com.lms.LeaveManagementSystem.repository.LeaveHistoryRepository;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
+import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -24,9 +25,8 @@ public class LeaveHistoryServiceImpl implements LeaveHistoryService {
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        MyUserDetails details = (MyUserDetails) auth.getPrincipal();
+        return details.getUser();
     }
 
     @Override

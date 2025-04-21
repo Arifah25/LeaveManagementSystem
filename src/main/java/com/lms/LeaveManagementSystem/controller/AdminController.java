@@ -1,7 +1,9 @@
 package com.lms.LeaveManagementSystem.controller;
 
+import com.lms.LeaveManagementSystem.dto.DepartmentDto;
 import com.lms.LeaveManagementSystem.dto.LeaveRequestDto;
 import com.lms.LeaveManagementSystem.dto.UserDto;
+import com.lms.LeaveManagementSystem.service.DepartmentService;
 import com.lms.LeaveManagementSystem.service.LeaveService;
 import com.lms.LeaveManagementSystem.service.UserService;
 
@@ -26,6 +28,8 @@ public class AdminController {
     private UserService userService;
     @Autowired
     private LeaveService leaveService;
+    @Autowired
+    private DepartmentService departmentService;
 
     @Operation(summary = "Get all users", description = "Fetches a list of all users in the system")
     @GetMapping("/users")
@@ -43,14 +47,25 @@ public class AdminController {
     }
 
     @PostMapping("/leave-requests/{id}/approve")
+    @Operation(summary = "Approve leave request", description = "Approves a leave request by the employee")
+    @PreAuthorize("hasRole('ADMIN')")
     public void approve(@PathVariable Long id) {
         leaveService.adminApproveLeave(id);
     }
 
     @PostMapping("/leave-requests/{id}/reject")
+    @Operation(summary = "Reject leave request", description = "Rejects a leave request by the employee")
+    @PreAuthorize("hasRole('ADMIN')")
     public void reject(@PathVariable Long id) {
         leaveService.adminRejectLeave(id);
     }
-    // Additional admin endpoints (e.g. managing roles, auditing etc.) can be added
-    // here.
+
+    @PostMapping("/departments")
+    @Operation(summary = "Create a new department", description = "Creates a new department in the system")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DepartmentDto> createDepartment(@RequestBody DepartmentDto departmentDto) {
+        DepartmentDto createdDepartment = departmentService.createDepartment(departmentDto);
+        return ResponseEntity.ok(createdDepartment);
+    }
+
 }

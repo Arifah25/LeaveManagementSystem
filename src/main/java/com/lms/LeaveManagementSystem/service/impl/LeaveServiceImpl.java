@@ -13,6 +13,7 @@ import com.lms.LeaveManagementSystem.repository.LeaveRequestRepository;
 import com.lms.LeaveManagementSystem.repository.LeaveHistoryRepository;
 import com.lms.LeaveManagementSystem.repository.LeaveBalanceRepository;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
+import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -39,9 +40,8 @@ public class LeaveServiceImpl implements LeaveService {
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        MyUserDetails details = (MyUserDetails) auth.getPrincipal();
+        return details.getUser();
     }
 
     @Override
@@ -142,6 +142,8 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setEmployee(currentUser);
         leaveRequest.setStartDate(leaveRequestDto.getStartDate());
         leaveRequest.setEndDate(leaveRequestDto.getEndDate());
+        leaveRequest.setStartTime(leaveRequestDto.getStartTime());
+        leaveRequest.setEndTime(leaveRequestDto.getEndTime());
         leaveRequest.setLeaveType(LeaveType.valueOf(leaveRequestDto.getLeaveType().toUpperCase()));
         leaveRequest.setStatus(LeaveStatus.PENDING_MANAGER);
         leaveRequest.setReason(leaveRequestDto.getReason());
