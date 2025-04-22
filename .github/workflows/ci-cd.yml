@@ -25,6 +25,10 @@ jobs:
           java-version: 17
           distribution: temurin
 
+      # Grant execute permissions to mvnw
+      - name: Grant execute permissions to mvnw
+        run: chmod +x ./mvnw
+
       # Cache Maven dependencies
       - name: Cache Maven dependencies
         uses: actions/cache@v3
