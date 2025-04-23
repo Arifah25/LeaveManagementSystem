@@ -72,6 +72,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .employee(req.getEmployee())
                 .startDate(req.getStartDate())
                 .endDate(req.getEndDate())
+                .timeType(req.getTimeType())
                 .leaveType(req.getLeaveType())
                 .status(LeaveStatus.PENDING_ADMIN)
                 .notes("Approved by manager")
@@ -117,6 +118,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .employee(req.getEmployee())
                 .startDate(req.getStartDate())
                 .endDate(req.getEndDate())
+                .timeType(req.getTimeType())
                 .leaveType(req.getLeaveType())
                 .status(LeaveStatus.APPROVED)
                 .notes("Approved by admin")
@@ -137,6 +139,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .employee(req.getEmployee())
                 .startDate(req.getStartDate())
                 .endDate(req.getEndDate())
+                .timeType(req.getTimeType())
                 .leaveType(req.getLeaveType())
                 .status(LeaveStatus.REJECTED)
                 .notes("Rejected by admin")
@@ -152,16 +155,12 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setEmployee(currentUser);
         leaveRequest.setStartDate(leaveRequestDto.getStartDate());
         leaveRequest.setEndDate(leaveRequestDto.getEndDate());
-        leaveRequest.setStartTime(leaveRequestDto.getStartTime());
-        leaveRequest.setEndTime(leaveRequestDto.getEndTime());
-        leaveRequest.setLeaveType(LeaveType.valueOf(leaveRequestDto.getLeaveType().toUpperCase()));
+        leaveRequest.setTimeType(leaveRequestDto.getTimeType());
+        leaveRequest.setLeaveType(leaveRequestDto.getLeaveType());
         leaveRequest.setStatus(LeaveStatus.PENDING_MANAGER);
         leaveRequest.setReason(leaveRequestDto.getReason());
 
         leaveRequest = leaveRequestRepository.save(leaveRequest);
-        leaveRequestDto.setId(leaveRequest.getId());
-        leaveRequestDto.setStatus(leaveRequest.getStatus().name());
-        leaveRequestDto.setEmployeeId(currentUser.getId());
         return leaveRequestDto;
     }
 
@@ -227,7 +226,8 @@ public class LeaveServiceImpl implements LeaveService {
         dto.setEmployeeId(leaveRequest.getEmployee().getId());
         dto.setStartDate(leaveRequest.getStartDate());
         dto.setEndDate(leaveRequest.getEndDate());
-        dto.setLeaveType(leaveRequest.getLeaveType().name());
+        dto.setTimeType(leaveRequest.getTimeType());
+        dto.setLeaveType(leaveRequest.getLeaveType());
         dto.setStatus(leaveRequest.getStatus().name());
         dto.setReason(leaveRequest.getReason());
         return dto;

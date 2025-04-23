@@ -2,10 +2,11 @@ package com.lms.LeaveManagementSystem.entity;
 
 import com.lms.LeaveManagementSystem.enums.LeaveStatus;
 import com.lms.LeaveManagementSystem.enums.LeaveType;
+import com.lms.LeaveManagementSystem.enums.TimeType;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "leave_requests")
@@ -27,9 +28,8 @@ public class LeaveRequest extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    private LocalTime startTime; // Optional: For half-day or specific time-off requests
-
-    private LocalTime endTime; // Optional: For half-day or specific time-off requests
+    @Column(nullable = true)
+    private TimeType timeType; // Optional: If the leave is for a specific time of day
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

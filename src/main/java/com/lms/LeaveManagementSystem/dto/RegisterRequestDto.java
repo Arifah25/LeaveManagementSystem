@@ -3,6 +3,7 @@ package com.lms.LeaveManagementSystem.dto;
 import com.lms.LeaveManagementSystem.enums.Role;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RegisterRequestDto {
     private String fullName;
     private String email;

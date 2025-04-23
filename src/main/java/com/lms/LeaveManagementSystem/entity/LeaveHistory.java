@@ -2,6 +2,8 @@ package com.lms.LeaveManagementSystem.entity;
 
 import com.lms.LeaveManagementSystem.enums.LeaveStatus;
 import com.lms.LeaveManagementSystem.enums.LeaveType;
+import com.lms.LeaveManagementSystem.enums.TimeType;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -24,6 +26,9 @@ public class LeaveHistory extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDate endDate;
+
+    @Column(nullable = false)
+    private TimeType timeType; // Optional: If the leave is for a specific time of day
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
