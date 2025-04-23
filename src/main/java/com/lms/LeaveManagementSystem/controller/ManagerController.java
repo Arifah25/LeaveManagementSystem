@@ -2,8 +2,10 @@ package com.lms.LeaveManagementSystem.controller;
 
 import com.lms.LeaveManagementSystem.dto.LeaveRequestDto;
 import com.lms.LeaveManagementSystem.dto.ReportDto;
+import com.lms.LeaveManagementSystem.dto.UserDto;
 import com.lms.LeaveManagementSystem.service.LeaveService;
 import com.lms.LeaveManagementSystem.service.ReportService;
+import com.lms.LeaveManagementSystem.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +29,9 @@ public class ManagerController {
 
     @Autowired
     private ReportService reportService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/leave-requests")
     @Operation(summary = "Get leave requests for approval", description = "Fetches leave requests pending for manager approval")
@@ -58,5 +63,13 @@ public class ManagerController {
     public ResponseEntity<ReportDto> getManagerReport() {
         ReportDto report = reportService.getManagerReport();
         return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/employees")
+    @Operation(summary = "Get employees under manager", description = "Fetches a list of employees under the manager's supervision")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<List<UserDto>> getEmployeesUnderManager() {
+        List<UserDto> employees = userService.getEmployeesUnderManager();
+        return ResponseEntity.ok(employees);
     }
 }

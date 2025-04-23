@@ -16,6 +16,8 @@ import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,7 @@ public class LeaveServiceImpl implements LeaveService {
         return details.getUser();
     }
 
+    @Cacheable(cacheNames = "leaveRequests", key = "#id")
     @Override
     public List<LeaveRequestDto> getLeaveRequestsForManager() {
         User mgr = getCurrentUser();
@@ -56,6 +59,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
     @Override
     @Transactional
     public void managerApproveLeave(Long id) {
@@ -74,6 +78,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .build());
     }
 
+    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
     @Override
     @Transactional
     public void managerRejectLeave(Long id) {
@@ -91,6 +96,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .build());
     }
 
+    @Cacheable(cacheNames = "leaveRequests", key = "#id")
     @Override
     public List<LeaveRequestDto> getLeaveRequestsForAdmin() {
         return leaveRequestRepository.findByStatus(LeaveStatus.PENDING_ADMIN)
@@ -99,6 +105,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
     @Override
     @Transactional
     public void adminApproveLeave(Long id) {
@@ -115,8 +122,10 @@ public class LeaveServiceImpl implements LeaveService {
                 .notes("Approved by admin")
                 .build());
         // you may also update leave balance here, if not yet done
+        updateLeaveBalance(req.getEmployee(), req);
     }
 
+    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
     @Override
     @Transactional
     public void adminRejectLeave(Long id) {
@@ -134,6 +143,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .build());
     }
 
+    @Cacheable(cacheNames = "leaveRequests", key = "#id")
     @Override
     @Transactional
     public LeaveRequestDto applyLeave(LeaveRequestDto leaveRequestDto) {
@@ -155,6 +165,7 @@ public class LeaveServiceImpl implements LeaveService {
         return leaveRequestDto;
     }
 
+    @Cacheable(cacheNames = "leaveHistory", key = "#id")
     @Override
     public List<LeaveHistoryDto> getLeaveHistoryForEmployee() {
         User currentUser = getCurrentUser();
@@ -172,6 +183,7 @@ public class LeaveServiceImpl implements LeaveService {
         }).collect(Collectors.toList());
     }
 
+    @Cacheable(cacheNames = "leaveBalance", key = "#id")
     @Override
     public LeaveBalanceDto getLeaveBalanceForEmployee() {
         User currentUser = getCurrentUser();
@@ -185,6 +197,7 @@ public class LeaveServiceImpl implements LeaveService {
         return dto;
     }
 
+    @Cacheable(cacheNames = "leaveRequest", key = "#id")
     @Override
     public LeaveRequestDto getLeaveRequestById(Long id) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
@@ -192,6 +205,7 @@ public class LeaveServiceImpl implements LeaveService {
         return mapToDto(leaveRequest);
     }
 
+    @CacheEvict(cacheNames = "leaveRequest", key = "#id")
     @Override
     @Transactional
     public void cancelLeaveRequest(Long id) {
@@ -220,6 +234,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     // A simple update method for employee leave balance.
+    // This should be called after a leave request is approved.
     private void updateLeaveBalance(User employee, LeaveRequest leaveRequest) {
         LeaveBalance balance = leaveBalanceRepository.findByEmployee(employee)
                 .orElseThrow(() -> new RuntimeException("Leave balance not found"));

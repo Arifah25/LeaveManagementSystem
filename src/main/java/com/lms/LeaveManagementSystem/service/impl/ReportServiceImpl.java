@@ -5,6 +5,7 @@ import com.lms.LeaveManagementSystem.enums.LeaveStatus;
 import com.lms.LeaveManagementSystem.repository.LeaveRequestRepository;
 import com.lms.LeaveManagementSystem.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private LeaveRequestRepository leaveRequestRepository;
 
+    @Cacheable(cacheNames = "managerReport")
     @Override
     public ReportDto getManagerReport() {
         ReportDto report = new ReportDto();

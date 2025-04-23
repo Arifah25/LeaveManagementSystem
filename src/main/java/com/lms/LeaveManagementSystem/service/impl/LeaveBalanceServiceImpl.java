@@ -8,7 +8,9 @@ import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveBalanceService;
 
+import org.hibernate.annotations.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
         return details.getUser();
     }
 
+    @Cacheable(cacheNames = "leaveBalance", key = "#id")
     @Override
     public LeaveBalanceDto getLeaveBalanceForEmployee() {
         User currentUser = getCurrentUser();

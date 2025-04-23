@@ -7,7 +7,10 @@ import com.lms.LeaveManagementSystem.repository.LeaveHistoryRepository;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveHistoryService;
+
+import org.hibernate.annotations.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ public class LeaveHistoryServiceImpl implements LeaveHistoryService {
         return details.getUser();
     }
 
+    @Cacheable(cacheNames = "leaveHistory", key = "#id")
     @Override
     public List<LeaveHistoryDto> getLeaveHistoryForEmployee() {
         User currentUser = getCurrentUser();

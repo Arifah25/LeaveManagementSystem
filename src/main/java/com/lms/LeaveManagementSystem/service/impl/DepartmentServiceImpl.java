@@ -8,6 +8,8 @@ import com.lms.LeaveManagementSystem.repository.DepartmentRepository;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.service.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Cacheable(cacheNames = "departments")
     @Override
     public List<DepartmentDto> getAllDepartments() {
         List<Department> departments = departmentRepository.findAll();
@@ -33,6 +36,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }).collect(Collectors.toList());
     }
 
+    @Cacheable(cacheNames = "employeesByDepartment", key = "#id")
     @Override
     public List<UserDto> getTotalEmployeeByDepartment(Long id) {
         // Fetch the department by ID
@@ -48,6 +52,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }).collect(Collectors.toList());
     }
 
+    @CacheEvict(cacheNames = "employeesByDepartment", allEntries = true)
     @Override
     public DepartmentDto createDepartment(DepartmentDto departmentDto) {
         // Check if the department already exists
@@ -69,6 +74,18 @@ public class DepartmentServiceImpl implements DepartmentService {
         dto.setName(savedDepartment.getName());
         dto.setDescription(savedDepartment.getDescription());
         return dto;
+    }
+
+    @CacheEvict(cacheNames = "departments", allEntries = true)
+    @Override
+    public void deleteDepartment(Long id) {
+        // Check if the department exists
+        if (!departmentRepository.existsById(id)) {
+            throw new RuntimeException("Department not found");
+        }
+
+        // Delete the department
+        departmentRepository.deleteById(id);
     }
 
 }

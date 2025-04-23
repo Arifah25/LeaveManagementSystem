@@ -68,4 +68,28 @@ public class AdminController {
         return ResponseEntity.ok(createdDepartment);
     }
 
+    @GetMapping("/departments")
+    @Operation(summary = "Get all departments", description = "Fetches a list of all departments in the system")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DepartmentDto>> getAllDepartments() {
+        List<DepartmentDto> departments = departmentService.getAllDepartments();
+        return ResponseEntity.ok(departments);
+    }
+
+    @GetMapping("/departments/{id}/employees")
+    @Operation(summary = "Get employees by department", description = "Fetches a list of employees in a specific department")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserDto>> getEmployeesByDepartment(@PathVariable Long id) {
+        List<UserDto> employees = departmentService.getTotalEmployeeByDepartment(id);
+        return ResponseEntity.ok(employees);
+    }
+
+    @DeleteMapping("/departments/{id}")
+    @Operation(summary = "Delete a department", description = "Deletes a department from the system")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
+        departmentService.deleteDepartment(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
