@@ -3,7 +3,6 @@ package com.lms.LeaveManagementSystem.controller;
 import com.lms.LeaveManagementSystem.dto.LeaveRequestDto;
 import com.lms.LeaveManagementSystem.enums.LeaveType;
 import com.lms.LeaveManagementSystem.enums.TimeType;
-import com.lms.LeaveManagementSystem.dto.LeaveHistoryDto;
 import com.lms.LeaveManagementSystem.dto.LeaveBalanceDto;
 import com.lms.LeaveManagementSystem.service.LeaveService;
 

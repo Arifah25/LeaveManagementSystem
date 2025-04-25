@@ -2,16 +2,13 @@ package com.lms.LeaveManagementSystem.service.impl;
 
 import com.lms.LeaveManagementSystem.dto.LeaveRequestDto;
 import com.lms.LeaveManagementSystem.dto.ManagerDto;
-import com.lms.LeaveManagementSystem.dto.LeaveHistoryDto;
 import com.lms.LeaveManagementSystem.dto.LeaveBalanceDto;
 import com.lms.LeaveManagementSystem.enums.LeaveStatus;
 import com.lms.LeaveManagementSystem.enums.LeaveType;
 import com.lms.LeaveManagementSystem.entity.LeaveRequest;
-import com.lms.LeaveManagementSystem.entity.LeaveHistory;
 import com.lms.LeaveManagementSystem.entity.LeaveBalance;
 import com.lms.LeaveManagementSystem.entity.User;
 import com.lms.LeaveManagementSystem.repository.LeaveRequestRepository;
-import com.lms.LeaveManagementSystem.repository.LeaveHistoryRepository;
 import com.lms.LeaveManagementSystem.repository.LeaveBalanceRepository;
 import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.security.MyUserDetails;
@@ -31,9 +28,6 @@ public class LeaveServiceImpl implements LeaveService {
 
     @Autowired
     private LeaveRequestRepository leaveRequestRepository;
-
-    @Autowired
-    private LeaveHistoryRepository leaveHistoryRepository;
 
     @Autowired
     private LeaveBalanceRepository leaveBalanceRepository;
@@ -65,16 +59,6 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new RuntimeException("Not found"));
         req.setStatus(LeaveStatus.PENDING_ADMIN);
         leaveRequestRepository.save(req);
-        // record history
-        leaveHistoryRepository.save(LeaveHistory.builder()
-                .employee(req.getEmployee())
-                .startDate(req.getStartDate())
-                .endDate(req.getEndDate())
-                .timeType(req.getTimeType())
-                .leaveType(req.getLeaveType())
-                .status(LeaveStatus.PENDING_ADMIN)
-                .notes("Approved by manager")
-                .build());
 
         // Evict employee's history cache
         evictEmployeeCache(req.getEmployee().getId());
@@ -88,14 +72,6 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new RuntimeException("Not found"));
         req.setStatus(LeaveStatus.REJECTED);
         leaveRequestRepository.save(req);
-        leaveHistoryRepository.save(LeaveHistory.builder()
-                .employee(req.getEmployee())
-                .startDate(req.getStartDate())
-                .endDate(req.getEndDate())
-                .leaveType(req.getLeaveType())
-                .status(LeaveStatus.REJECTED)
-                .notes("Rejected by manager")
-                .build());
 
         // Evict employee's history cache
         evictEmployeeCache(req.getEmployee().getId());
@@ -118,15 +94,6 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new RuntimeException("Not found"));
         req.setStatus(LeaveStatus.APPROVED);
         leaveRequestRepository.save(req);
-        leaveHistoryRepository.save(LeaveHistory.builder()
-                .employee(req.getEmployee())
-                .startDate(req.getStartDate())
-                .endDate(req.getEndDate())
-                .timeType(req.getTimeType())
-                .leaveType(req.getLeaveType())
-                .status(LeaveStatus.APPROVED)
-                .notes("Approved by admin")
-                .build());
         // you may also update leave balance here, if not yet done
         updateLeaveBalance(req.getEmployee(), req);
 
@@ -142,15 +109,6 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new RuntimeException("Not found"));
         req.setStatus(LeaveStatus.REJECTED);
         leaveRequestRepository.save(req);
-        leaveHistoryRepository.save(LeaveHistory.builder()
-                .employee(req.getEmployee())
-                .startDate(req.getStartDate())
-                .endDate(req.getEndDate())
-                .timeType(req.getTimeType())
-                .leaveType(req.getLeaveType())
-                .status(LeaveStatus.REJECTED)
-                .notes("Rejected by admin")
-                .build());
 
         // Evict employee's caches
         evictEmployeeCache(req.getEmployee().getId());

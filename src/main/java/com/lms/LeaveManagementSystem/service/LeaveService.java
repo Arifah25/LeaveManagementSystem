@@ -1,7 +1,6 @@
 package com.lms.LeaveManagementSystem.service;
 
 import com.lms.LeaveManagementSystem.dto.LeaveRequestDto;
-import com.lms.LeaveManagementSystem.dto.LeaveHistoryDto;
 import com.lms.LeaveManagementSystem.dto.LeaveBalanceDto;
 import java.util.List;
 
