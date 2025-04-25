@@ -57,9 +57,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     // auth.setDetails(new WebAuthenticationDetailsSource()
                     // .buildDetails(request));
 
-                    // 🔍 Log the actual authorities on the auth token:
+                    // 🔍 Log the actual username and authorities on the auth token:
                     log.debug("Authenticating user={}, authorities={}",
-                            userDetails, null, userDetails.getAuthorities());
+                            userDetails.getUsername(),
+                            userDetails.getAuthorities());
 
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }

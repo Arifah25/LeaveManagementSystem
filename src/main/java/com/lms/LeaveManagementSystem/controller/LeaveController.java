@@ -21,7 +21,7 @@ public class LeaveController {
     @Autowired
     private LeaveService leaveService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/{leaveRequestId}")
     @Operation(summary = "Get leave request by ID", description = "Fetches a leave request by its ID")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<LeaveRequestDto> getLeaveRequestById(@PathVariable Long id) {
@@ -29,7 +29,7 @@ public class LeaveController {
         return ResponseEntity.ok(leaveRequest);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{leaveRequestId}")
     @Operation(summary = "Cancel leave request", description = "Allows an employee to cancel a leave request")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<Void> cancelLeaveRequest(@PathVariable Long id) {

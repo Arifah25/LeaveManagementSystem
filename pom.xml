@@ -116,6 +116,13 @@
 		<artifactId>spring-session-data-redis</artifactId>
 		</dependency>
 
+		<dependency>
+  <groupId>com.fasterxml.jackson.datatype</groupId>
+  <artifactId>jackson-datatype-jsr310</artifactId>
+  <version>2.18.3</version>  <!-- match your Jackson version -->
+</dependency>
+
+
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -7,28 +7,40 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.session.data.redis.config.ConfigureRedisAction;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.data.redis.serializer.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.time.Duration;
 
 @Configuration
 @EnableCaching
-@EnableRedisHttpSession
 public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(60)) // Default TTL of 60 minutes
-                .disableCachingNullValues();
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(cacheConfig)
-                .build();
-    }
+        // 1) build an ObjectMapper with JSR-310 support
+        ObjectMapper om = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    @Bean
-    public ConfigureRedisAction configureRedisAction() {
-        return ConfigureRedisAction.NO_OP;
+        // 2) plug it into your JSON serializer
+        GenericJackson2JsonRedisSerializer jsonSer = new GenericJackson2JsonRedisSerializer(om);
+
+        RedisSerializationContext.SerializationPair<Object> valueSerializer = RedisSerializationContext.SerializationPair
+                .fromSerializer(jsonSer);
+        RedisSerializationContext.SerializationPair<String> keySerializer = RedisSerializationContext.SerializationPair
+                .fromSerializer(new StringRedisSerializer());
+
+        RedisCacheConfiguration cfg = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(60))
+                .disableCachingNullValues()
+                .serializeKeysWith(keySerializer)
+                .serializeValuesWith(valueSerializer);
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(cfg)
+                .build();
     }
 }

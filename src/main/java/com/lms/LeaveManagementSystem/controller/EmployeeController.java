@@ -8,17 +8,18 @@ import com.lms.LeaveManagementSystem.dto.LeaveBalanceDto;
 import com.lms.LeaveManagementSystem.service.LeaveService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.DateFormat;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -33,16 +34,21 @@ public class EmployeeController {
     @PostMapping("/leave-requests")
     @Operation(summary = "Apply for leave", description = "Allows an employee to apply for a leave request")
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<LeaveRequestDto> applyForLeave(@RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate,
-            @RequestParam TimeType time,
-            @RequestParam LeaveType leaveType,
-            @RequestParam String reason) {
+    public ResponseEntity<LeaveRequestDto> applyForLeave(
+            @RequestParam("startDate") @DateTimeFormat(pattern = "d-M-yyyy") @Parameter(schema = @Schema(type = "string", format = "date", example = "28-4-2025")) LocalDate startDate,
+
+            @RequestParam("endDate") @DateTimeFormat(pattern = "d-M-yyyy") @Parameter(schema = @Schema(type = "string", format = "date", example = "28-4-2025")) LocalDate endDate,
+
+            @RequestParam("time") TimeType time,
+
+            @RequestParam("leaveType") LeaveType leaveType,
+
+            @RequestParam("reason") String reason) {
         LeaveRequestDto leaveRequestDto = new LeaveRequestDto();
         leaveRequestDto.setStartDate(startDate);
         leaveRequestDto.setEndDate(endDate);
         leaveRequestDto.setTimeType(time);
-        ;
+
         leaveRequestDto.setLeaveType(leaveType);
         leaveRequestDto.setReason(reason);
         LeaveRequestDto createdLeaveRequest = leaveService.applyLeave(leaveRequestDto);
@@ -52,8 +58,8 @@ public class EmployeeController {
     @GetMapping("/leave-history")
     @Operation(summary = "Get leave history", description = "Fetches the leave history for the employee")
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<List<LeaveHistoryDto>> getLeaveHistory() {
-        List<LeaveHistoryDto> leaveHistory = leaveService.getLeaveHistoryForEmployee();
+    public ResponseEntity<List<LeaveRequestDto>> getLeaveHistory() {
+        List<LeaveRequestDto> leaveHistory = leaveService.getLeaveHistoryForEmployee();
         return ResponseEntity.ok(leaveHistory);
     }
 

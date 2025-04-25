@@ -41,7 +41,7 @@ public class ManagerController {
         return ResponseEntity.ok(leaveRequests);
     }
 
-    @PostMapping("/leave-requests/{id}/approve")
+    @PostMapping("/leave-requests/{leaveRequestId}/approve")
     @Operation(summary = "Approve leave request", description = "Allows a manager to approve a leave request")
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> approveLeaveRequest(@PathVariable Long id) {
@@ -50,7 +50,7 @@ public class ManagerController {
     }
 
     @Operation(summary = "Reject leave request", description = "Allows a manager to reject a leave request")
-    @PostMapping("/leave-requests/{id}/reject")
+    @PostMapping("/leave-requests/{leaveRequestId}/reject")
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> rejectLeaveRequest(@PathVariable Long id) {
         leaveService.managerRejectLeave(id);

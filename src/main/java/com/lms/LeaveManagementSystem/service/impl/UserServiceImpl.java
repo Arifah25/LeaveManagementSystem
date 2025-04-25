@@ -62,12 +62,7 @@ public class UserServiceImpl implements UserService {
                 deptDto.setDescription(user.getDepartment().getDescription());
                 dto.setDepartment(deptDto);
             }
-            if (user.getManager() != null) {
-                UserDto managerDto = new UserDto();
-                managerDto.setId(user.getManager().getId());
-                managerDto.setFullName(user.getManager().getFullName());
-                dto.setManager(managerDto);
-            }
+
             return dto;
         }).collect(Collectors.toList());
     }

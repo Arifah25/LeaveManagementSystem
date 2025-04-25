@@ -46,14 +46,14 @@ public class AdminController {
         return leaveService.getLeaveRequestsForAdmin();
     }
 
-    @PostMapping("/leave-requests/{id}/approve")
+    @PostMapping("/leave-requests/{leaveRequestId}/approve")
     @Operation(summary = "Approve leave request", description = "Approves a leave request by the employee")
     @PreAuthorize("hasRole('ADMIN')")
     public void approve(@PathVariable Long id) {
         leaveService.adminApproveLeave(id);
     }
 
-    @PostMapping("/leave-requests/{id}/reject")
+    @PostMapping("/leave-requests/{leaveRequestId}/reject")
     @Operation(summary = "Reject leave request", description = "Rejects a leave request by the employee")
     @PreAuthorize("hasRole('ADMIN')")
     public void reject(@PathVariable Long id) {
@@ -63,7 +63,11 @@ public class AdminController {
     @PostMapping("/departments")
     @Operation(summary = "Create a new department", description = "Creates a new department in the system")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<DepartmentDto> createDepartment(@RequestBody DepartmentDto departmentDto) {
+    public ResponseEntity<DepartmentDto> createDepartment(@RequestParam String name,
+            @RequestParam String description) {
+        DepartmentDto departmentDto = new DepartmentDto();
+        departmentDto.setName(name);
+        departmentDto.setDescription(description);
         DepartmentDto createdDepartment = departmentService.createDepartment(departmentDto);
         return ResponseEntity.ok(createdDepartment);
     }
@@ -76,7 +80,7 @@ public class AdminController {
         return ResponseEntity.ok(departments);
     }
 
-    @GetMapping("/departments/{id}/employees")
+    @GetMapping("/departments/{departmentId}/employees")
     @Operation(summary = "Get employees by department", description = "Fetches a list of employees in a specific department")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto>> getEmployeesByDepartment(@PathVariable Long id) {
@@ -84,7 +88,7 @@ public class AdminController {
         return ResponseEntity.ok(employees);
     }
 
-    @DeleteMapping("/departments/{id}")
+    @DeleteMapping("/departments/{departmentId}")
     @Operation(summary = "Delete a department", description = "Deletes a department from the system")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {

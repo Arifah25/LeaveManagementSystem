@@ -4,16 +4,16 @@ import com.lms.LeaveManagementSystem.dto.LeaveHistoryDto;
 import com.lms.LeaveManagementSystem.entity.LeaveHistory;
 import com.lms.LeaveManagementSystem.entity.User;
 import com.lms.LeaveManagementSystem.repository.LeaveHistoryRepository;
-import com.lms.LeaveManagementSystem.repository.UserRepository;
 import com.lms.LeaveManagementSystem.security.MyUserDetails;
 import com.lms.LeaveManagementSystem.service.LeaveHistoryService;
-
-import org.hibernate.annotations.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,30 +23,46 @@ public class LeaveHistoryServiceImpl implements LeaveHistoryService {
     @Autowired
     private LeaveHistoryRepository leaveHistoryRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
+    /**
+     * Retrieves the current authenticated User entity.
+     */
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         MyUserDetails details = (MyUserDetails) auth.getPrincipal();
         return details.getUser();
     }
 
-    @Cacheable(cacheNames = "leaveHistory", key = "#id")
+    /**
+     * Cache the leave history list for the current user by their ID.
+     */
     @Override
+    @Cacheable(cacheNames = "leaveHistory", key = "#root.target.getCurrentUser().id")
     public List<LeaveHistoryDto> getLeaveHistoryForEmployee() {
         User currentUser = getCurrentUser();
         List<LeaveHistory> histories = leaveHistoryRepository.findByEmployee(currentUser);
-        return histories.stream().map(history -> {
-            LeaveHistoryDto dto = new LeaveHistoryDto();
-            dto.setId(history.getId());
-            dto.setEmployeeId(history.getEmployee().getId());
-            dto.setStartDate(history.getStartDate());
-            dto.setEndDate(history.getEndDate());
-            dto.setLeaveType(history.getLeaveType().name());
-            dto.setStatus(history.getStatus().name());
-            dto.setNotes(history.getNotes());
-            return dto;
-        }).collect(Collectors.toList());
+        return histories.stream()
+                .map(history -> {
+                    LeaveHistoryDto dto = new LeaveHistoryDto();
+                    dto.setId(history.getId());
+                    dto.setEmployeeId(history.getEmployee().getId());
+                    dto.setStartDate(history.getStartDate());
+                    dto.setEndDate(history.getEndDate());
+                    dto.setLeaveType(history.getLeaveType().name());
+                    dto.setStatus(history.getStatus().name());
+                    dto.setNotes(history.getNotes());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Evict the cached leave history when the history changes (e.g., after applying
+     * or approving leave).
+     * Call this from your LeaveServiceImpl where you create new LeaveHistory
+     * entries.
+     */
+    @CacheEvict(cacheNames = "leaveHistory", key = "#root.target.getCurrentUser().id")
+    public void evictLeaveHistoryCache() {
+        // intentionally empty; triggers cache eviction
     }
 }

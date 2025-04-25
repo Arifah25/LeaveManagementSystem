@@ -10,7 +10,9 @@ import com.lms.LeaveManagementSystem.service.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,8 +25,9 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Autowired
     private UserRepository userRepository;
 
-    @Cacheable(cacheNames = "departments")
+    // Cache the list of all departments
     @Override
+    @Cacheable(cacheNames = "departments")
     public List<DepartmentDto> getAllDepartments() {
         List<Department> departments = departmentRepository.findAll();
         return departments.stream().map(dept -> {
@@ -36,10 +39,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         }).collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "employeesByDepartment", key = "#id")
+    // Cache the employees for a given department ID
     @Override
+    @Cacheable(cacheNames = "employeesByDepartment", key = "#id")
     public List<UserDto> getTotalEmployeeByDepartment(Long id) {
-        // Fetch the department by ID
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Department not found"));
         List<User> users = userRepository.findByDepartment(department);
@@ -47,45 +50,44 @@ public class DepartmentServiceImpl implements DepartmentService {
             UserDto dto = new UserDto();
             dto.setId(user.getId());
             dto.setEmail(user.getEmail());
-            dto.setRole(user.getRole()); // Assuming Role is an enum
+            dto.setRole(user.getRole());
             return dto;
         }).collect(Collectors.toList());
     }
 
-    @CacheEvict(cacheNames = "employeesByDepartment", allEntries = true)
+    // Evict both department list and employeesByDepartment caches when creating
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "departments", allEntries = true),
+            @CacheEvict(cacheNames = "employeesByDepartment", allEntries = true)
+    })
     public DepartmentDto createDepartment(DepartmentDto departmentDto) {
-        // Check if the department already exists
         if (departmentRepository.existsByName(departmentDto.getName())) {
             throw new RuntimeException("Department already exists");
         }
 
-        // Create a new department entity
         Department department = new Department();
         department.setName(departmentDto.getName());
         department.setDescription(departmentDto.getDescription());
+        Department saved = departmentRepository.save(department);
 
-        // Save the department to the database
-        Department savedDepartment = departmentRepository.save(department);
-
-        // Convert to DTO and return
         DepartmentDto dto = new DepartmentDto();
-        dto.setId(savedDepartment.getId());
-        dto.setName(savedDepartment.getName());
-        dto.setDescription(savedDepartment.getDescription());
+        dto.setId(saved.getId());
+        dto.setName(saved.getName());
+        dto.setDescription(saved.getDescription());
         return dto;
     }
 
-    @CacheEvict(cacheNames = "departments", allEntries = true)
+    // Evict both caches when deleting a department
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "departments", allEntries = true),
+            @CacheEvict(cacheNames = "employeesByDepartment", allEntries = true)
+    })
     public void deleteDepartment(Long id) {
-        // Check if the department exists
         if (!departmentRepository.existsById(id)) {
             throw new RuntimeException("Department not found");
         }
-
-        // Delete the department
         departmentRepository.deleteById(id);
     }
-
 }

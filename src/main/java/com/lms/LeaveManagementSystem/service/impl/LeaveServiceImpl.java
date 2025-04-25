@@ -1,6 +1,7 @@
 package com.lms.LeaveManagementSystem.service.impl;
 
 import com.lms.LeaveManagementSystem.dto.LeaveRequestDto;
+import com.lms.LeaveManagementSystem.dto.ManagerDto;
 import com.lms.LeaveManagementSystem.dto.LeaveHistoryDto;
 import com.lms.LeaveManagementSystem.dto.LeaveBalanceDto;
 import com.lms.LeaveManagementSystem.enums.LeaveStatus;
@@ -46,20 +47,17 @@ public class LeaveServiceImpl implements LeaveService {
         return details.getUser();
     }
 
-    @Cacheable(cacheNames = "leaveRequests", key = "#id")
+    @Cacheable(cacheNames = "managerLeaveRequests", key = "#root.target.getCurrentUserId()")
     @Override
     public List<LeaveRequestDto> getLeaveRequestsForManager() {
-        User mgr = getCurrentUser();
-        return leaveRequestRepository.findByStatus(LeaveStatus.PENDING_MANAGER)
+        User currentUser = getCurrentUser();
+        return leaveRequestRepository.findByStatusAndManager(LeaveStatus.PENDING_MANAGER, currentUser)
                 .stream()
-                // only requests in this manager’s department
-                .filter(req -> req.getEmployee().getDepartment()
-                        .equals(mgr.getDepartment()))
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
+    @CacheEvict(cacheNames = { "managerLeaveRequests", "adminLeaveRequests", "leaveRequest" }, key = "#id")
     @Override
     @Transactional
     public void managerApproveLeave(Long id) {
@@ -77,9 +75,12 @@ public class LeaveServiceImpl implements LeaveService {
                 .status(LeaveStatus.PENDING_ADMIN)
                 .notes("Approved by manager")
                 .build());
+
+        // Evict employee's history cache
+        evictEmployeeCache(req.getEmployee().getId());
     }
 
-    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
+    @CacheEvict(cacheNames = { "managerLeaveRequests", "leaveRequest" }, key = "#id")
     @Override
     @Transactional
     public void managerRejectLeave(Long id) {
@@ -95,9 +96,12 @@ public class LeaveServiceImpl implements LeaveService {
                 .status(LeaveStatus.REJECTED)
                 .notes("Rejected by manager")
                 .build());
+
+        // Evict employee's history cache
+        evictEmployeeCache(req.getEmployee().getId());
     }
 
-    @Cacheable(cacheNames = "leaveRequests", key = "#id")
+    // @Cacheable(cacheNames = "adminLeaveRequests")
     @Override
     public List<LeaveRequestDto> getLeaveRequestsForAdmin() {
         return leaveRequestRepository.findByStatus(LeaveStatus.PENDING_ADMIN)
@@ -106,7 +110,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
+    @CacheEvict(cacheNames = { "adminLeaveRequests", "leaveRequest" }, key = "#id")
     @Override
     @Transactional
     public void adminApproveLeave(Long id) {
@@ -125,9 +129,12 @@ public class LeaveServiceImpl implements LeaveService {
                 .build());
         // you may also update leave balance here, if not yet done
         updateLeaveBalance(req.getEmployee(), req);
+
+        // Evict employee's caches
+        evictEmployeeCache(req.getEmployee().getId());
     }
 
-    @CacheEvict(cacheNames = "leaveRequests", key = "#id")
+    @CacheEvict(cacheNames = { "adminLeaveRequests", "leaveRequest" }, key = "#id")
     @Override
     @Transactional
     public void adminRejectLeave(Long id) {
@@ -144,9 +151,11 @@ public class LeaveServiceImpl implements LeaveService {
                 .status(LeaveStatus.REJECTED)
                 .notes("Rejected by admin")
                 .build());
+
+        // Evict employee's caches
+        evictEmployeeCache(req.getEmployee().getId());
     }
 
-    @Cacheable(cacheNames = "leaveRequests", key = "#id")
     @Override
     @Transactional
     public LeaveRequestDto applyLeave(LeaveRequestDto leaveRequestDto) {
@@ -159,30 +168,49 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setLeaveType(leaveRequestDto.getLeaveType());
         leaveRequest.setStatus(LeaveStatus.PENDING_MANAGER);
         leaveRequest.setReason(leaveRequestDto.getReason());
+        leaveRequest.setManager(currentUser.getManager());
 
         leaveRequest = leaveRequestRepository.save(leaveRequest);
+
+        // Evict manager's cache as a new request is available
+        evictManagerCache();
+
+        // Evict employee's history cache
+        evictEmployeeCache(currentUser.getId());
+
         return leaveRequestDto;
     }
 
-    @Cacheable(cacheNames = "leaveHistory", key = "#id")
+    @Cacheable(cacheNames = "leaveHistory", key = "#root.target.getCurrentUserId()")
     @Override
-    public List<LeaveHistoryDto> getLeaveHistoryForEmployee() {
+    public List<LeaveRequestDto> getLeaveHistoryForEmployee() {
         User currentUser = getCurrentUser();
-        List<LeaveHistory> histories = leaveHistoryRepository.findByEmployee(currentUser);
-        return histories.stream().map(history -> {
-            LeaveHistoryDto dto = new LeaveHistoryDto();
-            dto.setId(history.getId());
-            dto.setEmployeeId(history.getEmployee().getId());
-            dto.setStartDate(history.getStartDate());
-            dto.setEndDate(history.getEndDate());
-            dto.setLeaveType(history.getLeaveType().name());
-            dto.setStatus(history.getStatus().name());
-            dto.setNotes(history.getNotes());
-            return dto;
-        }).collect(Collectors.toList());
+        return leaveRequestRepository
+                .findByEmployee(currentUser)
+                .stream()
+                .map(history -> {
+                    LeaveRequestDto dto = new LeaveRequestDto();
+                    dto.setId(history.getId());
+                    dto.setEmployeeId(currentUser.getId());
+                    dto.setStartDate(history.getStartDate());
+                    dto.setEndDate(history.getEndDate());
+                    dto.setLeaveType(history.getLeaveType());
+                    dto.setTimeType(history.getTimeType());
+                    dto.setStatus(history.getStatus());
+                    dto.setReason(history.getReason());
+                    if (history.getManager() != null) {
+                        ManagerDto m = new ManagerDto();
+                        m.setId(history.getManager().getId());
+                        m.setFullName(history.getManager().getFullName());
+                        m.setEmail(history.getManager().getEmail());
+                        dto.setManager(m);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "leaveBalance", key = "#id")
+    @Cacheable(cacheNames = "leaveBalance", key = "#root.target.getCurrentUserId()")
     @Override
     public LeaveBalanceDto getLeaveBalanceForEmployee() {
         User currentUser = getCurrentUser();
@@ -210,13 +238,48 @@ public class LeaveServiceImpl implements LeaveService {
     public void cancelLeaveRequest(Long id) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("LeaveRequest not found"));
+        User employee = leaveRequest.getEmployee();
+
         if (leaveRequest.getStatus() == LeaveStatus.PENDING_MANAGER
                 || leaveRequest.getStatus() == LeaveStatus.PENDING_ADMIN) {
             leaveRequest.setStatus(LeaveStatus.CANCELLED);
             leaveRequestRepository.save(leaveRequest);
+
+            // Evict appropriate caches
+            if (leaveRequest.getStatus() == LeaveStatus.PENDING_MANAGER) {
+                evictManagerCache();
+            } else if (leaveRequest.getStatus() == LeaveStatus.PENDING_ADMIN) {
+                evictAdminCache();
+            }
+
+            // Evict employee's history cache
+            evictEmployeeCache(employee.getId());
         } else {
             throw new RuntimeException("Only pending leave requests can be cancelled");
         }
+    }
+
+    // Helper methods for cache management
+
+    // Get current user ID for cache keys
+    public Long getCurrentUserId() {
+        return getCurrentUser().getId();
+    }
+
+    // Evict all caches related to an employee
+    @CacheEvict(cacheNames = { "leaveHistory", "leaveBalance" }, key = "#employeeId")
+    public void evictEmployeeCache(Long employeeId) {
+        // Method intentionally empty - the annotation does the work
+    }
+
+    @CacheEvict(cacheNames = "managerLeaveRequests", allEntries = true)
+    public void evictManagerCache() {
+        // Method intentionally empty - the annotation does the work
+    }
+
+    @CacheEvict(cacheNames = "adminLeaveRequests", allEntries = true)
+    public void evictAdminCache() {
+        // Method intentionally empty - the annotation does the work
     }
 
     // Helper method to map a LeaveRequest entity to its DTO.
@@ -228,8 +291,15 @@ public class LeaveServiceImpl implements LeaveService {
         dto.setEndDate(leaveRequest.getEndDate());
         dto.setTimeType(leaveRequest.getTimeType());
         dto.setLeaveType(leaveRequest.getLeaveType());
-        dto.setStatus(leaveRequest.getStatus().name());
+        dto.setStatus(leaveRequest.getStatus());
         dto.setReason(leaveRequest.getReason());
+        if (leaveRequest.getManager() != null) {
+            ManagerDto m = new ManagerDto();
+            m.setId(leaveRequest.getManager().getId());
+            m.setFullName(leaveRequest.getManager().getFullName());
+            m.setEmail(leaveRequest.getManager().getEmail());
+            dto.setManager(m);
+        }
         return dto;
     }
 

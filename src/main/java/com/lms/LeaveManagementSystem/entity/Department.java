@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "departments")
 @Getter
@@ -20,5 +22,6 @@ public class Department extends BaseEntity {
 
     // One-to-Many relationship with users
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<User> users;
 }

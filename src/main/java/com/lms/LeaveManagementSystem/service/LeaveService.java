@@ -20,7 +20,7 @@ public interface LeaveService {
 
     void adminRejectLeave(Long requestId);
 
-    List<LeaveHistoryDto> getLeaveHistoryForEmployee();
+    List<LeaveRequestDto> getLeaveHistoryForEmployee();
 
     LeaveBalanceDto getLeaveBalanceForEmployee();
 

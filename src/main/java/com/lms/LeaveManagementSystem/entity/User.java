@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.lms.LeaveManagementSystem.enums.Role;
 
 @Entity
@@ -30,11 +32,13 @@ public class User extends BaseEntity {
     // manager_id is optional, as not all users will have a manager
     @ManyToOne
     @JoinColumn(name = "manager_id", nullable = true)
+    @JsonIgnore
     private User manager;
 
     // Optional: Associate user with a department
     @ManyToOne
     @JoinColumn(name = "department_id")
+    @JsonIgnoreProperties({ "users", "department", "manager" })
     private Department department;
 
     // Optional: Set of leave requests associated with the user
