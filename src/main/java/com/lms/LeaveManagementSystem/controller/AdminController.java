@@ -49,15 +49,15 @@ public class AdminController {
     @PostMapping("/leave-requests/{leaveRequestId}/approve")
     @Operation(summary = "Approve leave request", description = "Approves a leave request by the employee")
     @PreAuthorize("hasRole('ADMIN')")
-    public void approve(@PathVariable Long id) {
-        leaveService.adminApproveLeave(id);
+    public void approve(@PathVariable Long leaveRequestId) {
+        leaveService.adminApproveLeave(leaveRequestId);
     }
 
     @PostMapping("/leave-requests/{leaveRequestId}/reject")
     @Operation(summary = "Reject leave request", description = "Rejects a leave request by the employee")
     @PreAuthorize("hasRole('ADMIN')")
-    public void reject(@PathVariable Long id) {
-        leaveService.adminRejectLeave(id);
+    public void reject(@PathVariable Long leaveRequestId) {
+        leaveService.adminRejectLeave(leaveRequestId);
     }
 
     @PostMapping("/departments")
@@ -83,16 +83,16 @@ public class AdminController {
     @GetMapping("/departments/{departmentId}/employees")
     @Operation(summary = "Get employees by department", description = "Fetches a list of employees in a specific department")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserDto>> getEmployeesByDepartment(@PathVariable Long id) {
-        List<UserDto> employees = departmentService.getTotalEmployeeByDepartment(id);
+    public ResponseEntity<List<UserDto>> getEmployeesByDepartment(@PathVariable Long departmentId) {
+        List<UserDto> employees = departmentService.getTotalEmployeeByDepartment(departmentId);
         return ResponseEntity.ok(employees);
     }
 
     @DeleteMapping("/departments/{departmentId}")
     @Operation(summary = "Delete a department", description = "Deletes a department from the system")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
-        departmentService.deleteDepartment(id);
+    public ResponseEntity<Void> deleteDepartment(@PathVariable Long departmentId) {
+        departmentService.deleteDepartment(departmentId);
         return ResponseEntity.noContent().build();
     }
 

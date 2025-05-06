@@ -64,7 +64,7 @@ public class LeaveServiceImpl implements LeaveService {
         evictEmployeeCache(req.getEmployee().getId());
     }
 
-    @CacheEvict(cacheNames = { "managerLeaveRequests", "leaveRequest" }, key = "#id")
+    @CacheEvict(cacheNames = { "managerLeaveRequests", "adminLeaveRequests", "leaveRequest" }, key = "#id")
     @Override
     @Transactional
     public void managerRejectLeave(Long id) {
@@ -75,6 +75,9 @@ public class LeaveServiceImpl implements LeaveService {
 
         // Evict employee's history cache
         evictEmployeeCache(req.getEmployee().getId());
+
+        // Also evict the admin cache
+        evictAdminCache();
     }
 
     // @Cacheable(cacheNames = "adminLeaveRequests")
@@ -128,6 +131,7 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setReason(leaveRequestDto.getReason());
         leaveRequest.setManager(currentUser.getManager());
 
+        // Save the entity to the database
         leaveRequest = leaveRequestRepository.save(leaveRequest);
 
         // Evict manager's cache as a new request is available
@@ -136,10 +140,12 @@ public class LeaveServiceImpl implements LeaveService {
         // Evict employee's history cache
         evictEmployeeCache(currentUser.getId());
 
-        return leaveRequestDto;
+        // Return the DTO with values from the saved entity
+        return mapToDto(leaveRequest);
     }
 
-    @Cacheable(cacheNames = "leaveHistory", key = "#root.target.getCurrentUserId()")
+    // @Cacheable(cacheNames = "leaveHistory", key =
+    // "#root.target.getCurrentUserId()")
     @Override
     public List<LeaveRequestDto> getLeaveHistoryForEmployee() {
         User currentUser = getCurrentUser();
@@ -225,7 +231,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     // Evict all caches related to an employee
-    @CacheEvict(cacheNames = { "leaveHistory", "leaveBalance" }, key = "#employeeId")
+    @CacheEvict(cacheNames = { "leaveHistory", "leaveBalance" }, key = "T(java.lang.Long).valueOf(#employeeId)")
     public void evictEmployeeCache(Long employeeId) {
         // Method intentionally empty - the annotation does the work
     }

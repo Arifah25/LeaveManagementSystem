@@ -44,16 +44,16 @@ public class ManagerController {
     @PostMapping("/leave-requests/{leaveRequestId}/approve")
     @Operation(summary = "Approve leave request", description = "Allows a manager to approve a leave request")
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<Void> approveLeaveRequest(@PathVariable Long id) {
-        leaveService.managerApproveLeave(id);
+    public ResponseEntity<Void> approveLeaveRequest(@PathVariable Long leaveRequestId) {
+        leaveService.managerApproveLeave(leaveRequestId);
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Reject leave request", description = "Allows a manager to reject a leave request")
     @PostMapping("/leave-requests/{leaveRequestId}/reject")
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<Void> rejectLeaveRequest(@PathVariable Long id) {
-        leaveService.managerRejectLeave(id);
+    public ResponseEntity<Void> rejectLeaveRequest(@PathVariable Long leaveRequestId) {
+        leaveService.managerRejectLeave(leaveRequestId);
         return ResponseEntity.ok().build();
     }
 
