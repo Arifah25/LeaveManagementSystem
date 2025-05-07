@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -74,6 +75,12 @@ public class AuthController {
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/try")
+    @Operation(summary = "Refresh Token", description = "Allows a user to refresh their authentication token")
+    public String success() {
+        return "success";
     }
 
     // Global Exception Handler for Validation Errors

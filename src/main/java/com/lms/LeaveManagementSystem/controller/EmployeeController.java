@@ -32,7 +32,7 @@ public class EmployeeController {
 
     @PostMapping("/leave-requests")
     @Operation(summary = "Apply for leave", description = "Allows an employee to apply for a leave request")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'CLIENT_EMPLOYEE')")
     public ResponseEntity<LeaveRequestDto> applyForLeave(
             @RequestParam("startDate") @DateTimeFormat(pattern = "d-M-yyyy") @Parameter(schema = @Schema(type = "string", format = "date", example = "28-4-2025")) LocalDate startDate,
 
@@ -56,7 +56,7 @@ public class EmployeeController {
 
     @GetMapping("/leave-history")
     @Operation(summary = "Get leave history", description = "Fetches the leave history for the employee")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'CLIENT_EMPLOYEE')")
     public ResponseEntity<List<LeaveRequestDto>> getLeaveHistory() {
         List<LeaveRequestDto> leaveHistory = leaveService.getLeaveHistoryForEmployee();
         return ResponseEntity.ok(leaveHistory);
@@ -64,7 +64,7 @@ public class EmployeeController {
 
     @GetMapping("/leave-balance")
     @Operation(summary = "Get leave balance", description = "Fetches the leave balance for the employee")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'CLIENT_EMPLOYEE')")
     public ResponseEntity<LeaveBalanceDto> getLeaveBalance() {
         LeaveBalanceDto leaveBalance = leaveService.getLeaveBalanceForEmployee();
         return ResponseEntity.ok(leaveBalance);

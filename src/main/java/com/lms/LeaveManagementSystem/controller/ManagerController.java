@@ -35,7 +35,7 @@ public class ManagerController {
 
     @GetMapping("/leave-requests")
     @Operation(summary = "Get leave requests for approval", description = "Fetches leave requests pending for manager approval")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CLIENT_MANAGER')")
     public ResponseEntity<List<LeaveRequestDto>> getLeaveRequestsForApproval() {
         List<LeaveRequestDto> leaveRequests = leaveService.getLeaveRequestsForManager();
         return ResponseEntity.ok(leaveRequests);
@@ -43,7 +43,7 @@ public class ManagerController {
 
     @PostMapping("/leave-requests/{leaveRequestId}/approve")
     @Operation(summary = "Approve leave request", description = "Allows a manager to approve a leave request")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CLIENT_MANAGER')")
     public ResponseEntity<Void> approveLeaveRequest(@PathVariable Long leaveRequestId) {
         leaveService.managerApproveLeave(leaveRequestId);
         return ResponseEntity.ok().build();
@@ -51,7 +51,7 @@ public class ManagerController {
 
     @Operation(summary = "Reject leave request", description = "Allows a manager to reject a leave request")
     @PostMapping("/leave-requests/{leaveRequestId}/reject")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CLIENT_MANAGER')")
     public ResponseEntity<Void> rejectLeaveRequest(@PathVariable Long leaveRequestId) {
         leaveService.managerRejectLeave(leaveRequestId);
         return ResponseEntity.ok().build();
@@ -59,7 +59,7 @@ public class ManagerController {
 
     @GetMapping("/report")
     @Operation(summary = "Get manager report", description = "Fetches a report for the manager")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CLIENT_MANAGER')")
     public ResponseEntity<ReportDto> getManagerReport() {
         ReportDto report = reportService.getManagerReport();
         return ResponseEntity.ok(report);
@@ -67,7 +67,7 @@ public class ManagerController {
 
     @GetMapping("/employees")
     @Operation(summary = "Get employees under manager", description = "Fetches a list of employees under the manager's supervision")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CLIENT_MANAGER')")
     public ResponseEntity<List<UserDto>> getEmployeesUnderManager() {
         List<UserDto> employees = userService.getEmployeesUnderManager();
         return ResponseEntity.ok(employees);

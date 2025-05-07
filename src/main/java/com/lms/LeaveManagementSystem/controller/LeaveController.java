@@ -23,7 +23,7 @@ public class LeaveController {
 
     @GetMapping("/{leaveRequestId}")
     @Operation(summary = "Get leave request by ID", description = "Fetches a leave request by its ID")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'CLIENT_EMPLOYEE', 'MANAGER', 'CLIENT_MANAGER', 'ADMIN', 'CLIENT_ADMIN')")
     public ResponseEntity<LeaveRequestDto> getLeaveRequestById(@PathVariable Long leaveRequestId) {
         LeaveRequestDto leaveRequest = leaveService.getLeaveRequestById(leaveRequestId);
         return ResponseEntity.ok(leaveRequest);
@@ -31,7 +31,7 @@ public class LeaveController {
 
     @DeleteMapping("/{leaveRequestId}")
     @Operation(summary = "Cancel leave request", description = "Allows an employee to cancel a leave request")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'CLIENT_EMPLOYEE')")
     public ResponseEntity<Void> cancelLeaveRequest(@PathVariable Long leaveRequestId) {
         leaveService.cancelLeaveRequest(leaveRequestId);
         return ResponseEntity.ok().build();
